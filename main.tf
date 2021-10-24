@@ -19,3 +19,10 @@ module "network" {
   network_range = "10.0.0.0/16"
   subnet_count  = 2
 }
+
+module "cluster" {
+  source             = "./modules/cluster"
+  name               = var.name
+  public_subnet_ids  = module.network.public_subnet_ids
+  private_subnet_ids = module.network.private_subnet_ids
+}
