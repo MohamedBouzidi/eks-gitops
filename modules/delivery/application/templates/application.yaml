@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample
+  namespace: {{.Values.namespace}}
+spec:
+  project: default
+  source:
+    repoURL: {{.Values.repository_url}}
+    targetRevision: HEAD
+    path: {{.Values.manifest_path}}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{.Values.namespace}}
