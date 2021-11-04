@@ -16,8 +16,8 @@ provider "aws" {
 locals {
   repository_path_chunks = split("/", split("git@github.com:", var.repository_url)[1])
   repository_owner       = local.repository_path_chunks[0]
-  repository_name        = local.repository_path_chunks[1]
-  repository_key         = file(var.repository_key)
+  repository_name        = split(".git", local.repository_path_chunks[1])[0]
+  manifest_path          = "infra/manifests"
 }
 
 module "network" {
@@ -34,6 +34,18 @@ module "cluster" {
   private_subnet_ids = module.network.private_subnet_ids
 }
 
+module "build" {
+  source        = "./modules/build"
+  name          = var.name
+  manifest_path = local.manifest_path
+  codestar_connection_arn = var.codestar_connection_arn
+  repository = {
+    owner  = local.repository_owner
+    name   = local.repository_name
+    branch = var.repository_branch
+  }
+}
+
 module "delivery" {
   source      = "./modules/delivery"
   aws_profile = "terraform"
@@ -44,9 +56,9 @@ module "delivery" {
   }
   application = {
     repository_url = var.repository_url
-    manifest_path  = "infra/manifests"
+    manifest_path  = local.manifest_path
     namespace      = "default"
-    key            = local.repository_key
+    key            = var.repository_key
   }
   adminPassword = "helloAdmin123"
 }

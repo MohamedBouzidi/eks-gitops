@@ -37,7 +37,7 @@ resource "helm_release" "argocd" {
 
 resource "helm_release" "application" {
   name = "application"
-  chart = "./application"
+  chart = "./modules/delivery/application"
 
   set {
     name = "repository_url"
@@ -56,6 +56,6 @@ resource "helm_release" "application" {
 
   set {
     name = "repository_key"
-    value = var.application.key
+    value = file(var.application.key)
   }
 }

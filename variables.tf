@@ -18,3 +18,8 @@ variable "repository_key" {
   type        = string
   description = "Repository SSH key file path"
 }
+
+variable "codestar_connection_arn" {
+  type = string
+  description = "CodeStar Connection ARN"
+}
