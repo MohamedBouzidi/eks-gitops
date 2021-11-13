@@ -1,0 +1,14 @@
+directory:
+  - .
+quiet: true
+framework: terraform
+skip-check:
+  - CKV2_AWS_11
+  - CKV2_AWS_12
+  - CKV_AWS_18
+  - CKV2_AWS_19
+  - CKV_AWS_37
+  - CKV_AWS_39
+  - CKV_AWS_130
+  - CKV_AWS_144
+  - CKV_AWS_147

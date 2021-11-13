@@ -13,6 +13,6 @@ variable "network_range" {
 }
 
 variable "subnet_count" {
-  type = number
+  type        = number
   description = "Number of public/private subnet pairs"
 }

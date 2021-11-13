@@ -10,12 +10,50 @@ terraform {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_kms_key" "s3_sse_kms" {
+  key_id = "alias/aws/s3"
+}
+
+data "aws_kms_key" "ecr_kms" {
+  key_id = "alias/aws/ecr"
+}
+
 resource "aws_s3_bucket" "artifact_store" {
   force_destroy = true
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = data.aws_kms_key.s3_sse_kms.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "artifact_store" {
+  bucket = aws_s3_bucket.artifact_store.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_ecr_repository" "main" {
-  name = lower("${var.name}-app")
+  name                 = lower("${var.name}-app")
+  image_tag_mutability = "IMMUTABLE"
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = data.aws_kms_key.ecr_kms.arn
+  }
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
 
 resource "aws_iam_role" "codebuild" {
@@ -193,9 +231,9 @@ resource "aws_codepipeline" "main" {
       version          = "1"
       output_artifacts = ["code"]
       configuration = {
-        ConnectionArn    = var.codestar_connection_arn
-        BranchName       = var.repository.branch
-        FullRepositoryId = join("/", [var.repository.owner, var.repository.name])
+        ConnectionArn        = var.codestar_connection_arn
+        BranchName           = var.repository.branch
+        FullRepositoryId     = join("/", [var.repository.owner, var.repository.name])
         OutputArtifactFormat = "CODEBUILD_CLONE_REF"
       }
     }

@@ -24,7 +24,7 @@ provider "helm" {
 }
 
 resource "helm_release" "argocd" {
-  name       = "argocd"
+  name = "argocd"
 
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
@@ -36,26 +36,26 @@ resource "helm_release" "argocd" {
 }
 
 resource "helm_release" "application" {
-  name = "application"
+  name  = "application"
   chart = "./modules/delivery/application"
 
   set {
-    name = "repository_url"
+    name  = "repository_url"
     value = var.application.repository_url
   }
 
   set {
-    name = "manifest_path"
+    name  = "manifest_path"
     value = var.application.manifest_path
   }
 
   set {
-    name = "namespace"
+    name  = "namespace"
     value = var.application.namespace
   }
 
   set {
-    name = "repository_key"
+    name  = "repository_key"
     value = file(var.application.key)
   }
 }

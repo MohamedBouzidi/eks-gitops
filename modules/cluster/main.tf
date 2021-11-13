@@ -8,6 +8,10 @@ terraform {
   }
 }
 
+data "aws_kms_key" "secrets_encryption" {
+  key_id = var.secrets_encryption_kms_key_id
+}
+
 resource "aws_iam_role" "cluster" {
   name = "${var.name}-cluster"
   assume_role_policy = jsonencode({
@@ -32,8 +36,16 @@ resource "aws_eks_cluster" "cluster" {
   name       = var.name
   role_arn   = aws_iam_role.cluster.arn
 
+  encryption_config {
+    resources = ["secrets"]
+    provider {
+      key_arn = data.aws_kms_key.secrets_encryption.id
+    }
+  }
+
   vpc_config {
-    subnet_ids = concat(var.public_subnet_ids, var.private_subnet_ids)
+    subnet_ids          = concat(var.public_subnet_ids, var.private_subnet_ids)
+    public_access_cidrs = [var.my_cidr_range]
   }
 }
 

@@ -1,0 +1,7 @@
+---
+exclude:
+  - CUS002
+  - aws-s3-enable-versioning
+  - aws-s3-enable-bucket-logging
+  - aws-eks-no-public-cluster-access
+  - aws-eks-enable-control-plane-logging

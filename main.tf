@@ -35,16 +35,19 @@ module "network" {
 }
 
 module "cluster" {
-  source             = "./modules/cluster"
-  name               = var.name
-  public_subnet_ids  = module.network.public_subnet_ids
-  private_subnet_ids = module.network.private_subnet_ids
+  source                        = "./modules/cluster"
+  name                          = var.name
+  vpc_id                        = module.network.vpc_id
+  public_subnet_ids             = module.network.public_subnet_ids
+  private_subnet_ids            = module.network.private_subnet_ids
+  secrets_encryption_kms_key_id = var.secrets_key
+  my_cidr_range                 = var.my_cidr_range
 }
 
 module "build" {
-  source        = "./modules/build"
-  name          = var.name
-  manifest_path = local.manifest_path
+  source                  = "./modules/build"
+  name                    = var.name
+  manifest_path           = local.manifest_path
   codestar_connection_arn = var.codestar_connection_arn
   repository = {
     owner  = local.repository_owner
@@ -67,5 +70,5 @@ module "delivery" {
     namespace      = "default"
     key            = var.repository_key
   }
-  adminPassword = "helloAdmin123"
+  adminPassword = var.argocd_admin_password
 }
