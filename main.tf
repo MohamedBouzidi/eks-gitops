@@ -1,5 +1,12 @@
 terraform {
   required_version = ">= 1.0.0"
+  backend "remote" {
+    organization = "magicfruit0"
+
+    workspaces {
+      name = "default"
+    }
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
