@@ -21,10 +21,10 @@ provider "aws" {
 }
 
 locals {
-  repository_path_chunks = split("/", split("git@github.com:", var.repository_url)[1])
-  repository_owner       = local.repository_path_chunks[0]
-  repository_name        = split(".git", local.repository_path_chunks[1])[0]
-  manifest_path          = "infra/manifests"
+  app_repository_path_chunks = split("/", split("git@github.com:", var.app_repository.url)[1])
+  app_repository_owner       = local.app_repository_path_chunks[0]
+  app_repository_name        = split(".git", local.app_repository_path_chunks[1])[0]
+  manifest_path              = "infra/manifests/app"
 }
 
 module "network" {
@@ -49,10 +49,16 @@ module "build" {
   name                    = var.name
   manifest_path           = local.manifest_path
   codestar_connection_arn = var.codestar_connection_arn
-  repository = {
-    owner  = local.repository_owner
-    name   = local.repository_name
-    branch = var.repository_branch
+  app_repository = {
+    owner  = local.app_repository_owner
+    name   = local.app_repository_name
+    branch = var.app_repository.branch
+  }
+
+  infra_repository = {
+    url    = var.infra_repository.url
+    branch = var.infra_repository.branch
+    key    = var.infra_repository.key
   }
 }
 
@@ -65,10 +71,10 @@ module "delivery" {
     certificate = module.cluster.certificate
   }
   application = {
-    repository_url = var.repository_url
+    repository_url = var.infra_repository.url
     manifest_path  = local.manifest_path
     namespace      = "default"
-    key            = var.repository_key
+    key            = var.infra_repository.key
   }
   adminPassword = var.argocd_admin_password
 }

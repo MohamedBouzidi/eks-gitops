@@ -29,13 +29,12 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_app_repository"></a> [app\_repository](#input\_app\_repository) | Application source repository | <pre>object({<br>    url    = string<br>    branch = string<br>  })</pre> | n/a | yes |
 | <a name="input_argocd_admin_password"></a> [argocd\_admin\_password](#input\_argocd\_admin\_password) | ArgoCD Admin password | `string` | n/a | yes |
 | <a name="input_codestar_connection_arn"></a> [codestar\_connection\_arn](#input\_codestar\_connection\_arn) | CodeStar Connection ARN | `string` | n/a | yes |
+| <a name="input_infra_repository"></a> [infra\_repository](#input\_infra\_repository) | Infrastructure source repository | <pre>object({<br>    url    = string<br>    branch = string<br>    key    = string<br>  })</pre> | n/a | yes |
 | <a name="input_my_cidr_range"></a> [my\_cidr\_range](#input\_my\_cidr\_range) | Network range for cluster administration | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name prefix for resources | `string` | `"EKS-GitOps"` | no |
-| <a name="input_repository_branch"></a> [repository\_branch](#input\_repository\_branch) | Repository branch to build and deploy | `string` | n/a | yes |
-| <a name="input_repository_key"></a> [repository\_key](#input\_repository\_key) | Repository SSH key file path | `string` | n/a | yes |
-| <a name="input_repository_url"></a> [repository\_url](#input\_repository\_url) | Repository URl to build and deploy | `string` | n/a | yes |
 | <a name="input_secrets_key"></a> [secrets\_key](#input\_secrets\_key) | AWS KMS key for encrypting Kubernetes secrets | `string` | n/a | yes |
 
 ## Outputs

@@ -147,6 +147,21 @@ resource "aws_codebuild_project" "main" {
     }
 
     environment_variable {
+      name  = "INFRA_REPOSITORY_URL"
+      value = var.infra_repository.url
+    }
+
+    environment_variable {
+      name  = "INFRA_REPOSITORY_KEY"
+      value = var.infra_repository.key
+    }
+
+    environment_variable {
+      name  = "INFRA_REPOSITORY_BRANCH"
+      value = var.infra_repository.branch
+    }
+
+    environment_variable {
       name  = "MANIFEST_PATH"
       value = var.manifest_path
     }
@@ -232,8 +247,8 @@ resource "aws_codepipeline" "main" {
       output_artifacts = ["code"]
       configuration = {
         ConnectionArn        = var.codestar_connection_arn
-        BranchName           = var.repository.branch
-        FullRepositoryId     = join("/", [var.repository.owner, var.repository.name])
+        BranchName           = var.app_repository.branch
+        FullRepositoryId     = join("/", [var.app_repository.owner, var.app_repository.name])
         OutputArtifactFormat = "CODEBUILD_CLONE_REF"
       }
     }

@@ -13,16 +13,18 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Docker image...          
+      - echo Building the Docker image...
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ECR_URL/$IMAGE_REPO_NAME:$IMAGE_TAG      
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ECR_URL/$IMAGE_REPO_NAME:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $ECR_URL/$IMAGE_REPO_NAME:$IMAGE_TAG
-      - CURRENT_BRANCH=$(git branch -a --contains HEAD | sed -n 2p | awk '{ printf $1 }')
-      - git checkout $CURRENT_BRANCH
+      - echo $INFRA_REPOSITORY_KEY > $PWD/infra_repo_key
+      - GIT_SSH_COMMAND="ssh -i $PWD/infra_repo_key"
+      - git clone $INFRA_REPOSITORY_URL /infra_repo
+      - cd /infra_repo && git checkout $INFRA_REPOSITORY_BRANCH
       - echo "image:" > $MANIFEST_PATH/image.yaml
       - echo -n "  repository:" >> $MANIFEST_PATH/image.yaml
       - echo " $ECR_URL/$IMAGE_REPO_NAME" >> $MANIFEST_PATH/image.yaml
@@ -33,7 +35,4 @@ phases:
       - GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
       - GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
       - git commit -am "CodeBuild Update app image to $IMAGE_REPO_NAME:$IMAGE_TAG"
-      - git push --set-upstream origin $CURRENT_BRANCH
-
-# To avoid second build, only do build on PR merge or ...
-# Use lambda with CodePipeline to trigger build only if code changes
+      - git push --set-upstream origin $INFRA_REPOSITORY_BRANCH

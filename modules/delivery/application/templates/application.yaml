@@ -12,6 +12,8 @@ spec:
     helm:
       valueFiles:
       - image.yaml
+  syncPolicy:
+    automated: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: {{.Values.namespace}}

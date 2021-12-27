@@ -39,13 +39,14 @@ resource "aws_eks_cluster" "cluster" {
   encryption_config {
     resources = ["secrets"]
     provider {
-      key_arn = data.aws_kms_key.secrets_encryption.id
+      key_arn = data.aws_kms_key.secrets_encryption.arn
     }
   }
 
   vpc_config {
-    subnet_ids          = concat(var.public_subnet_ids, var.private_subnet_ids)
-    public_access_cidrs = [var.my_cidr_range]
+    subnet_ids              = concat(var.public_subnet_ids, var.private_subnet_ids)
+    endpoint_private_access = true
+    public_access_cidrs     = [var.my_cidr_range]
   }
 }
 

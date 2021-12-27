@@ -4,19 +4,21 @@ variable "name" {
   default     = "EKS-GitOps"
 }
 
-variable "repository_url" {
-  type        = string
-  description = "Repository URl to build and deploy"
+variable "app_repository" {
+  description = "Application source repository"
+  type = object({
+    url    = string
+    branch = string
+  })
 }
 
-variable "repository_branch" {
-  type        = string
-  description = "Repository branch to build and deploy"
-}
-
-variable "repository_key" {
-  type        = string
-  description = "Repository SSH key file path"
+variable "infra_repository" {
+  description = "Infrastructure source repository"
+  type = object({
+    url    = string
+    branch = string
+    key    = string
+  })
 }
 
 variable "codestar_connection_arn" {
