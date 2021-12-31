@@ -8,21 +8,6 @@ terraform {
   }
 }
 
-provider "helm" {
-  kubernetes {
-    host                   = var.cluster.endpoint
-    cluster_ca_certificate = var.cluster.certificate
-    exec {
-      api_version = "client.authentication.k8s.io/v1alpha1"
-      args        = ["eks", "get-token", "--cluster-name", var.cluster.name]
-      command     = "aws"
-      env = {
-        AWS_PROFILE = var.aws_profile
-      }
-    }
-  }
-}
-
 resource "helm_release" "argocd" {
   name = "argocd"
 

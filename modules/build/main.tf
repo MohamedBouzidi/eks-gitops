@@ -18,6 +18,18 @@ data "aws_kms_key" "ecr_kms" {
   key_id = "alias/aws/ecr"
 }
 
+data "aws_ssm_parameter" "dockerhub_username" {
+  name = "/dockerhub/username"
+}
+
+data "aws_ssm_parameter" "dockerhub_access_token" {
+  name = "/dockerhub/accessToken"
+}
+
+data "aws_ssm_parameter" "infra_repo_key" {
+  name = "/argocd/key"
+}
+
 resource "aws_s3_bucket" "artifact_store" {
   force_destroy = true
 
@@ -111,6 +123,15 @@ resource "aws_iam_policy" "codebuild" {
         Effect   = "Allow"
         Resource = var.codestar_connection_arn
         Sid      = "UseCodeStarConnection"
+      },
+      {
+        Action = "ssm:GetParameter"
+        Effect = "Allow"
+        Resource = [
+          data.aws_ssm_parameter.dockerhub_username.arn,
+          data.aws_ssm_parameter.dockerhub_access_token.arn,
+          data.aws_ssm_parameter.infra_repo_key.arn
+        ]
       }
     ]
   })
@@ -142,6 +163,16 @@ resource "aws_codebuild_project" "main" {
     }
 
     environment_variable {
+      name  = "DOCKERHUB_USERNAME_SSM_PARAMETER"
+      value = data.aws_ssm_parameter.dockerhub_username.name
+    }
+
+    environment_variable {
+      name  = "DOCKERHUB_ACCESS_TOKEN_SSM_PARAMETER"
+      value = data.aws_ssm_parameter.dockerhub_access_token.name
+    }
+
+    environment_variable {
       name  = "IMAGE_REPO_NAME"
       value = aws_ecr_repository.main.name
     }
@@ -152,8 +183,8 @@ resource "aws_codebuild_project" "main" {
     }
 
     environment_variable {
-      name  = "INFRA_REPOSITORY_KEY"
-      value = var.infra_repository.key
+      name  = "INFRA_REPO_KEY_SSM_PARAMETER"
+      value = data.aws_ssm_parameter.infra_repo_key.name
     }
 
     environment_variable {

@@ -5,24 +5,30 @@ env:
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - ECR_URL=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URL
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - echo Loggin in to DockerHub...
+      - DOCKERHUB_USERNAME=$(aws ssm get-parameter --name "${DOCKERHUB_USERNAME_SSM_PARAMETER}" --with-decryption --query "Parameter.Value" | sed -e 's/"//g')
+      - DOCKERHUB_ACCESS_TOKEN=$(aws ssm get-parameter --name "${DOCKERHUB_ACCESS_TOKEN_SSM_PARAMETER}" --with-decryption --query "Parameter.Value" | sed -e 's/"//g')
+      - echo ${DOCKERHUB_ACCESS_TOKEN} | docker login --username ${DOCKERHUB_USERNAME} --password-stdin
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
+      - ECR_URL=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ECR_URL/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo Build completed on `date`
   post_build:
     commands:
-      - echo Build completed on `date`
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URL
       - echo Pushing the Docker image...
       - docker push $ECR_URL/$IMAGE_REPO_NAME:$IMAGE_TAG
-      - echo $INFRA_REPOSITORY_KEY > $PWD/infra_repo_key
-      - GIT_SSH_COMMAND="ssh -i $PWD/infra_repo_key"
+      - INFRA_REPO_KEY=$(aws ssm get-parameter --name "${INFRA_REPO_KEY_SSM_PARAMETER}" --with-decryption --query "Parameter.Value" | sed -e 's/"//g')
+      - echo -e ${INFRA_REPO_KEY} > $CODEBUILD_SRC_DIR/infra_repo_key
+      - chmod 400 $CODEBUILD_SRC_DIR/infra_repo_key
+      - export GIT_SSH_COMMAND="ssh -i $CODEBUILD_SRC_DIR/infra_repo_key -o IdentitiesOnly=yes"
       - git clone $INFRA_REPOSITORY_URL /infra_repo
       - cd /infra_repo && git checkout $INFRA_REPOSITORY_BRANCH
       - echo "image:" > $MANIFEST_PATH/image.yaml

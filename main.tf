@@ -12,12 +12,31 @@ terraform {
       source  = "hashicorp/aws"
       version = "3.61.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "2.3.0"
+    }
   }
 }
 
 provider "aws" {
   profile = "terraform"
   region  = "us-east-1"
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.cluster.endpoint
+    cluster_ca_certificate = module.cluster.certificate
+    exec {
+      api_version = "client.authentication.k8s.io/v1alpha1"
+      args        = ["eks", "get-token", "--cluster-name", module.cluster.name]
+      command     = "aws"
+      env = {
+        AWS_PROFILE = "terraform"
+      }
+    }
+  }
 }
 
 locals {
@@ -63,13 +82,9 @@ module "build" {
 }
 
 module "delivery" {
-  source      = "./modules/delivery"
-  aws_profile = "terraform"
-  cluster = {
-    name        = module.cluster.name
-    endpoint    = module.cluster.endpoint
-    certificate = module.cluster.certificate
-  }
+  source     = "./modules/delivery"
+  depends_on = [module.cluster]
+
   application = {
     repository_url = var.infra_repository.url
     manifest_path  = local.manifest_path
