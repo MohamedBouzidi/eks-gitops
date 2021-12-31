@@ -31,14 +31,22 @@ phases:
       - export GIT_SSH_COMMAND="ssh -i $CODEBUILD_SRC_DIR/infra_repo_key -o IdentitiesOnly=yes"
       - git clone $INFRA_REPOSITORY_URL /infra_repo
       - cd /infra_repo && git checkout $INFRA_REPOSITORY_BRANCH
-      - echo "image:" > $MANIFEST_PATH/image.yaml
-      - echo -n "  repository:" >> $MANIFEST_PATH/image.yaml
-      - echo " $ECR_URL/$IMAGE_REPO_NAME" >> $MANIFEST_PATH/image.yaml
-      - echo -n "  tag:" >> $MANIFEST_PATH/image.yaml
-      - echo " $IMAGE_TAG" >> $MANIFEST_PATH/image.yaml
+      - |
+        cat <<EOF > ${MANIFEST_PATH}/image.yaml
+        image:
+          repository: ${ECR_URL}/${IMAGE_REPO_NAME}
+          tag: ${IMAGE_TAG}
+        EOF
       - GIT_AUTHOR_NAME="CodeBuild"
       - GIT_AUTHOR_EMAIL="codebuild@example.com"
       - GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
       - GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
-      - git commit -am "CodeBuild Update app image to $IMAGE_REPO_NAME:$IMAGE_TAG"
-      - git push --set-upstream origin $INFRA_REPOSITORY_BRANCH
+      - |
+        if [[ -z $(git status --porcelain) ]]
+        then
+          echo "No changes detected."
+        else
+          echo "Updating the image tag in infra repo."
+          git commit -am "CodeBuild Update app image to $IMAGE_REPO_NAME:$IMAGE_TAG"
+          git push --set-upstream origin $INFRA_REPOSITORY_BRANCH
+        fi
